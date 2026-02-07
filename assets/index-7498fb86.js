@@ -301,7 +301,7 @@ ${o.join(`
 
 ---
 
-`)}`}async generateDraft(t,n,r,i,l){return this.executeWithRetry(async o=>{const u=o.getGenerativeModel({model:"gemini-1.5-pro"}),s=[];l&&s.push({inlineData:{mimeType:l.type,data:l.base64}});const a=r?`
+`)}`}async generateDraft(t,n,r,i,l){return this.executeWithRetry(async o=>{const u=o.getGenerativeModel({model:"gemini-2.5-flash"}),s=[];l&&s.push({inlineData:{mimeType:l.type,data:l.base64}});const a=r?`
 **重要提醒**: 我目前正在撰寫「${r}」這個小節的文獻探討。請將撰寫重點放在這個部分，確保內容與此小節高度相關。`:"",c=`
 你是一位遵循嚴格學術倫理的專業學術寫作者。
 
