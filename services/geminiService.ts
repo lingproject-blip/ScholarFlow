@@ -100,7 +100,7 @@ export class GeminiService {
       }
 
       const result = await this.executeWithRetry(async (genAI) => {
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
 
         const sectionContext = currentSection
           ? `\n**重要提醒**: 我目前正在撰寫「${currentSection}」這個小節的文獻探討。請特別聚焦於與此小節相關的內容。`
@@ -171,7 +171,7 @@ export class GeminiService {
     seniorExample: FileData | null
   ): Promise<string> {
     return this.executeWithRetry(async (genAI) => {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
 
       const parts: any[] = [];
 
