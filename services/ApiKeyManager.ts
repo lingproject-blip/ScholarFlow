@@ -8,7 +8,7 @@ export class ApiKeyManager {
     constructor(apiKeys: string[]) {
         const today = new Date().toISOString().split('T')[0];
         this.keys = apiKeys.map(key => ({
-            key,
+            key: key.trim(),
             status: 'available' as const,
             requestCount: 0,
             lastResetDate: today,
