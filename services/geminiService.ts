@@ -171,7 +171,7 @@ export class GeminiService {
     seniorExample: FileData | null
   ): Promise<string> {
     return this.executeWithRetry(async (genAI) => {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
       const parts: any[] = [];
 
