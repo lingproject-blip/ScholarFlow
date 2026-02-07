@@ -58,7 +58,7 @@ export class GeminiService {
           console.log("流量限制錯誤，切換 API key...");
           const switched = this.keyManager.markExhaustedAndRotate();
           if (!switched) {
-            throw new Error("所有 API 金鑰皆已耗盡。");
+            throw new Error(`所有 API 金鑰皆無法使用 (或遭到流量限制)。\n伺服器回應: ${errorMessage}\n請檢查 API Key 是否正確或配額已滿。`);
           }
           await delay(2000); // 等待 2 秒後重試
         } else if (status === 404 || errorMessage.includes('404') || errorMessage.includes('NOT_FOUND')) {
