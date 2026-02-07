@@ -113,6 +113,20 @@ export default function App() {
     setError(null);
   };
 
+  const resetToHome = () => {
+    setStep(Step.API_KEYS);
+    setApiKeys(['']);
+    setThesisInfo({ title: '', topic: '', currentSection: '' });
+    setReferences([]);
+    setSeniorExample(null);
+    setAnalysisResult('');
+    setDraftResult('');
+    setError(null);
+    setKeyStatuses([]);
+    setCurrentKeyIndex(0);
+    geminiService.current = null;
+  };
+
   // Render Helpers
   const renderStepIndicator = () => {
     const steps = [
@@ -147,7 +161,20 @@ export default function App() {
 
       {/* API Key 狀態顯示 */}
       {step !== Step.API_KEYS && keyStatuses.length > 0 && (
-        <ApiKeyStatus keyStatuses={keyStatuses} currentIndex={currentKeyIndex} />
+        <div className="space-y-4">
+          <ApiKeyStatus keyStatuses={keyStatuses} currentIndex={currentKeyIndex} />
+          <div className="flex justify-end">
+            <button
+              onClick={resetToHome}
+              className="text-sm text-slate-600 hover:text-indigo-600 flex items-center gap-1 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+              回到首頁
+            </button>
+          </div>
+        </div>
       )}
 
       <div className="max-w-3xl mx-auto">
@@ -366,7 +393,8 @@ export default function App() {
                 }}>
                   複製 Markdown
                 </Button>
-                <Button variant="secondary" onClick={reset}>重新開始</Button>
+                <Button variant="secondary" onClick={reset}>重新分析</Button>
+                <Button variant="secondary" onClick={resetToHome}>回到首頁</Button>
               </div>
             </div>
 
