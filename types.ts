@@ -14,10 +14,11 @@ export interface FileData {
 export enum Step {
   API_KEYS = 0,
   THESIS_INFO = 1,
-  UPLOAD_REFS = 2,
-  UPLOAD_STYLE = 3,
-  ANALYSIS = 4,
-  DRAFT = 5,
+  UPLOAD_THESIS = 2,
+  UPLOAD_REFS = 3,
+  UPLOAD_STYLE = 4,
+  ANALYSIS = 5,
+  DRAFT = 6,
 }
 
 export interface ApiKeyStatus {

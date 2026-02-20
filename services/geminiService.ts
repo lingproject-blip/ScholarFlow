@@ -85,7 +85,9 @@ export class GeminiService {
     researchTopic: string,
     currentSection: string | undefined,
     references: FileData[],
-    onProgress?: ProgressCallback
+    onProgress?: ProgressCallback,
+    thesisDraftText?: string,
+    thesisDraftPdfBase64?: string
   ): Promise<string> {
     const results: string[] = [];
     let processedCount = 0;
@@ -106,11 +108,16 @@ export class GeminiService {
           ? `\n**重要提醒**: 我目前正在撰寫「${currentSection}」這個小節的文獻探討。請特別聚焦於與此小節相關的內容。`
           : '';
 
+        // 論文草稿上下文（若有提供）
+        const draftContext = thesisDraftText
+          ? `\n**我目前的論文草稿（已完成部分）**：\n請仔細閱讀以下我已寫好的論文內容，了解我的寫作進度、風格與已涵蓋的論點，分析文獻時請避免重複已有內容，並聚焦於能補充和延伸現有論述的發現。\n\n---\n${thesisDraftText.substring(0, 8000)}\n---`
+          : '';
+
         const prompt = `
 你是一位專業的學術研究助理。
 
 我的論文題目：「${thesisTitle}」
-我的研究主題/重點：「${researchTopic}」${sectionContext}
+我的研究主題/重點：「${researchTopic}」${sectionContext}${draftContext}
 
 任務：
 1. 分析附檔中的英文學術論文（文獻編號 #${i + 1}：${ref.name}）。
@@ -134,15 +141,22 @@ export class GeminiService {
 [說明如何支持我的研究]
         `;
 
-        const result = await model.generateContent([
-          {
-            inlineData: {
-              mimeType: ref.type,
-              data: ref.base64,
-            },
-          },
-          { text: prompt },
-        ]);
+        const contentParts: any[] = [];
+
+        // 若有 PDF 格式的論文草稿，先加入
+        if (thesisDraftPdfBase64) {
+          contentParts.push({
+            inlineData: { mimeType: 'application/pdf', data: thesisDraftPdfBase64 },
+          });
+        }
+
+        // 加入參考文獻 PDF
+        contentParts.push(
+          { inlineData: { mimeType: ref.type, data: ref.base64 } },
+          { text: prompt }
+        );
+
+        const result = await model.generateContent(contentParts);
 
         const response = await result.response;
         return response.text();
@@ -169,12 +183,21 @@ export class GeminiService {
     researchTopic: string,
     currentSection: string | undefined,
     analysisText: string,
-    seniorExample: FileData | null
+    seniorExample: FileData | null,
+    thesisDraftText?: string,
+    thesisDraftPdfBase64?: string
   ): Promise<string> {
     return this.executeWithRetry(async (genAI) => {
       const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
       const parts: any[] = [];
+
+      // 若有 PDF 格式的論文草稿，先加入
+      if (thesisDraftPdfBase64) {
+        parts.push({
+          inlineData: { mimeType: 'application/pdf', data: thesisDraftPdfBase64 },
+        });
+      }
 
       // Add the Senior Example if it exists
       if (seniorExample) {
@@ -190,12 +213,17 @@ export class GeminiService {
         ? `\n**重要提醒**: 我目前正在撰寫「${currentSection}」這個小節的文獻探討。請將撰寫重點放在這個部分，確保內容與此小節高度相關。`
         : '';
 
+      // 論文草稿上下文（若有提供）
+      const draftContext = thesisDraftText
+        ? `\n\n**【重要】我目前已完成的論文草稿**：\n以下是我已寫好的論文內容。請仔細閱讀，充分理解我的寫作風格、用詞習慣、論文結構，以及已涵蓋的論點。\n在撰寫新的文獻探討時，你必須：\n1. 延續相同的寫作風格與語氣\n2. 避免重複已在草稿中提及的論點\n3. 確保新內容與既有章節自然銜接\n\n---草稿開始---\n${thesisDraftText.substring(0, 10000)}\n---草稿結束---`
+        : '';
+
       const prompt = `
 你是一位遵循嚴格學術倫理的專業學術寫作者。
 
 背景資訊：
 - 論文題目：「${thesisTitle}」
-- 研究主題：「${researchTopic}」${sectionContext}
+- 研究主題：「${researchTopic}」${sectionContext}${draftContext}
 - 文獻分析結果： 
 ${analysisText}
 

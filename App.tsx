@@ -7,6 +7,7 @@ import { ApiKeyStatus } from './components/ApiKeyStatus';
 import { ProgressBar } from './components/ProgressBar';
 import { GeminiService } from './services/geminiService';
 import { saveApiKeys, loadApiKeys } from './services/apiKeyStorage';
+import { extractThesisDraft, ThesisDraftData } from './services/thesisDraftReader';
 import { Step, FileData, ThesisInfo, ApiKeyStatus as ApiKeyStatusType } from './types';
 
 export default function App() {
@@ -14,6 +15,8 @@ export default function App() {
   const [step, setStep] = useState<Step>(Step.API_KEYS);
   const [apiKeys, setApiKeys] = useState<string[]>(() => loadApiKeys());
   const [thesisInfo, setThesisInfo] = useState<ThesisInfo>({ title: '', topic: '', currentSection: '' });
+  const [thesisDraftData, setThesisDraftData] = useState<ThesisDraftData | null>(null);
+  const [isDraftLoading, setIsDraftLoading] = useState(false);
   const [references, setReferences] = useState<FileData[]>([]);
   const [seniorExample, setSeniorExample] = useState<FileData | null>(null);
   const [analysisResult, setAnalysisResult] = useState<string>('');
@@ -84,7 +87,9 @@ export default function App() {
         references,
         (current, total, item) => {
           setProgress({ current, total, item });
-        }
+        },
+        thesisDraftData?.text || undefined,
+        thesisDraftData?.pdfBase64 || undefined
       );
       setAnalysisResult(result);
       setStep(Step.ANALYSIS);
@@ -106,7 +111,9 @@ export default function App() {
         thesisInfo.topic,
         thesisInfo.currentSection,
         analysisResult,
-        seniorExample
+        seniorExample,
+        thesisDraftData?.text || undefined,
+        thesisDraftData?.pdfBase64 || undefined
       );
       setDraftResult(result);
       setStep(Step.DRAFT);
@@ -124,6 +131,7 @@ export default function App() {
     setAnalysisResult('');
     setDraftResult('');
     setError(null);
+    setThesisDraftData(null);
   };
 
   const resetToHome = () => {
@@ -143,7 +151,7 @@ export default function App() {
   // Render Helpers
   const renderStepIndicator = () => {
     const steps = [
-      "API 金鑰", "題目", "參考文獻", "範例", "分析", "初稿"
+      "API 金鑰", "題目", "我的草稿", "參考文獻", "範例", "分析", "初稿"
     ];
     return (
       <div className="flex overflow-x-auto pb-4 mb-8 border-b border-slate-200 no-scrollbar">
@@ -296,16 +304,101 @@ export default function App() {
             </div>
             <div className="flex justify-end">
               <Button
-                onClick={() => setStep(Step.UPLOAD_REFS)}
+                onClick={() => setStep(Step.UPLOAD_THESIS)}
                 disabled={!thesisInfo.title || !thesisInfo.topic}
               >
-                下一步：上傳參考文獻
+                下一步：上傳我的草稿
               </Button>
             </div>
           </div>
         )}
 
-        {/* Step 2: Upload References */}
+        {/* Step 2: Upload Thesis Draft */}
+        {step === Step.UPLOAD_THESIS && (
+          <div className="space-y-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <div>
+              <h2 className="text-xl font-bold text-slate-800">上傳您目前的論文草稿 <span className="text-sm font-normal text-slate-400">（選填）</span></h2>
+              <p className="text-sm text-slate-500 mt-1">
+                上傳後 AI 會了解您的寫作進度、風格與已涵蓋的論點，生成的文獻探討將更連貫、不重複。
+              </p>
+            </div>
+
+            {/* 上傳區域 */}
+            <label className="block cursor-pointer">
+              <div className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${thesisDraftData ? 'border-indigo-300 bg-indigo-50' : 'border-slate-300 hover:border-indigo-400 hover:bg-slate-50'
+                }`}>
+                <input
+                  type="file"
+                  accept=".docx,.doc,.pdf"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setIsDraftLoading(true);
+                    setError(null);
+                    try {
+                      const data = await extractThesisDraft(file);
+                      setThesisDraftData(data);
+                    } catch (err: any) {
+                      setError(err.message || '讀取檔案失敗');
+                    } finally {
+                      setIsDraftLoading(false);
+                    }
+                  }}
+                />
+                {isDraftLoading ? (
+                  <div className="flex flex-col items-center gap-2 text-indigo-600">
+                    <svg className="animate-spin w-8 h-8" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    <span className="text-sm">正在讀取 Word 檔案...</span>
+                  </div>
+                ) : thesisDraftData ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <svg className="w-10 h-10 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="font-semibold text-indigo-700">{thesisDraftData.fileName}</p>
+                    {thesisDraftData.charCount > 0 ? (
+                      <p className="text-sm text-slate-600">✅ 已成功讀取 <span className="font-bold text-indigo-600">{thesisDraftData.charCount.toLocaleString()}</span> 個字元</p>
+                    ) : (
+                      <p className="text-sm text-slate-600">✅ PDF 已載入，將由 AI 直接讀取</p>
+                    )}
+                    <p className="text-xs text-slate-400 mt-1">點擊此處可重新上傳</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2 text-slate-400">
+                    <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p className="font-medium text-slate-500">點擊選擇您的論文草稿</p>
+                    <p className="text-xs">支援 <span className="font-semibold">.docx</span>（Word）或 <span className="font-semibold">.pdf</span></p>
+                  </div>
+                )}
+              </div>
+            </label>
+
+            {thesisDraftData && (
+              <button
+                onClick={() => setThesisDraftData(null)}
+                className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                移除草稿
+              </button>
+            )}
+
+            <div className="flex justify-between">
+              <Button variant="secondary" onClick={() => setStep(Step.THESIS_INFO)}>上一步</Button>
+              <Button onClick={() => setStep(Step.UPLOAD_REFS)}>
+                {thesisDraftData ? '下一步：上傳參考文獻' : '跳過，直接上傳參考文獻'}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Upload References */}
         {step === Step.UPLOAD_REFS && (
           <div className="space-y-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
             <h2 className="text-xl font-bold text-slate-800">上傳英文參考文獻</h2>
@@ -331,7 +424,7 @@ export default function App() {
               </div>
             )}
             <div className="flex justify-between">
-              <Button variant="secondary" onClick={() => setStep(Step.THESIS_INFO)}>上一步</Button>
+              <Button variant="secondary" onClick={() => setStep(Step.UPLOAD_THESIS)}>上一步</Button>
               <Button
                 onClick={() => setStep(Step.UPLOAD_STYLE)}
                 disabled={references.length === 0}
@@ -342,7 +435,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Step 3: Upload Style Example */}
+        {/* Step 4: Upload Style Example */}
         {step === Step.UPLOAD_STYLE && (
           <div className="space-y-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
             <h2 className="text-xl font-bold text-slate-800">上傳學長姐範例 (選填)</h2>
