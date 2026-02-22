@@ -277,21 +277,41 @@ Error generating stack: `+a.message+`
 ---
 ${o.substring(0,8e3)}
 ---`:"",v=`
-你是一位專業的學術研究助理。
+## 角色設定
+你是一位資深的學術研究助理，同時也是一位頂尖的英中翻譯專家。你的任務是閱讀英文學術論文，並將關鍵內容以流暢、精準的繁體中文（台灣學術用語）呈現。
 
-我的論文題目：「${n}」
-我的研究主題/重點：「${t}」${g}${p}
+## 我的論文資訊
+- 論文題目：「${n}」
+- 研究主題/重點：「${t}」${g}${p}
 
-任務：
+## 翻譯原則（Translation Principles）
+在將英文內容轉換為繁體中文時，你必須嚴格遵守以下四項原則：
+
+**原則一：語意保真，破除直譯**
+深入理解原文的底層語意、語氣與文化脈絡，尋找最自然、最貼切的中文表達方式，絕不進行僵硬的逐字翻譯。
+
+**原則二：在地化精準度**
+所有翻譯必須嚴格遵循台灣的詞彙、用語與語境規範，主動過濾香港或中國大陸慣用語。例如：「taxi」應譯為「計程車」，而非「的士」或「打的」。
+
+**原則三：語氣與文化細膩度**
+分析原文的正式程度與情感語氣，選用具有適當分量與內涵的中文字詞和句式。例如：翻譯「love」時，應根據上下文判斷應使用深沉的「愛」或較輕的「喜歡」。
+
+**原則四：格式規範**
+- 標點符號：使用全形標點符號（，。？！「」）。
+- 中文字元之間不留空格。
+- 中文字元與英文字母或數字之間插入一個半形空格（例如：研究結果顯示 AI 的介入效果）。
+
+## 分析任務
+請依序完成以下任務：
 1. 分析附檔中的英文學術論文（文獻編號 #${h+1}：${f.name}）。
-2. 找出能直接支持我的研究主題的關鍵發現、方法論、理論或論點。
-3. 不要只是總結論文。請提取具體的點來證明我的研究的重要性、可行性，或是有理論依據。
-4. 列出與我的主題一致的「關鍵引用內容」。
-5. **所有輸出結果必須使用繁體中文（Traditional Chinese）撰寫。**
-6. **重要：在每個論點或發現後，請明確標注「[來源：${f.name}]」，以便後續引用追蹤。**
+2. 依照上述翻譯原則，找出並以流暢繁體中文呈現能直接支持我的研究主題的關鍵發現、方法論、理論或論點。
+3. 不要只是總結論文——請提取具體的論點，以證明我的研究的重要性、可行性或理論依據。
+4. 列出與我的主題一致的「可直接引用論點」。
+5. **所有輸出結果必須使用繁體中文（台灣學術用語）撰寫。**
+6. **在每個論點或發現後，請明確標注「[來源：${f.name}]」，以便後續引用追蹤。**
 7. 以清晰的 Markdown 格式輸出，包含標題。
 
-請以以下格式輸出：
+## 輸出格式
 ## 📄 ${f.name}
 
 ### 核心發現
@@ -321,30 +341,52 @@ ${u.join(`
 ---草稿開始---
 ${o.substring(0,1e4)}
 ---草稿結束---`:"",f=`
-你是一位遵循嚴格學術倫理的專業學術寫作者。
+## 角色設定
+你現在是一位專業的學術研究者，擅長撰寫教育、社會科學領域的論文文獻探討。你的任務是以極度客觀、嚴謹、具備學術權威感的語氣，完成一篇約 3000 字的繁體中文學術文獻探討（Traditional Chinese，台灣學術用語）。
 
-背景資訊：
+## 背景資訊
 - 論文題目：「${n}」
 - 研究主題：「${t}」${d}${h}
-- 文獻分析結果： 
+- 文獻分析結果：
 ${i}
 
-${a?"附件中有一個檔案是「學長姐的文獻探討範例」。請僅參考其風格、結構、語氣和流暢度。切勿抄襲其內容。":"沒有提供風格範例，請使用標準的高品質學術散文風格。"}
+${a?"附件中有一個檔案是「學長姐的文獻探討範例」。請僅參考其風格、結構、語氣和流暢度，切勿抄襲其內容。":"沒有提供風格範例，請使用標準的高品質學術散文風格。"}
 
-任務：
-為我的論文撰寫「文獻探討（Literature Review）」章節的初稿。
+## 撰寫結構要求（請依序完成以下五個部分）
 
-要求：
-1. **整合（Synthesize）** 上述分析結果中的發現。不要只是條列摘要。將不同論文的觀點串連起來，為我的研究主題建立論證。
-2. **引用標注：** **這是最重要的要求！** 在撰寫每個論點、發現或引用時，必須在該句子或段落後立即標注來源文獻。格式為：「[來源：文獻檔名]」。例如：「研究顯示人工智慧可以提升都市規劃效率 [來源：AI_Urban_Planning.pdf]。」
-3. **風格：** 模仿附檔範例的學術語氣和結構（如果有提供）。
-4. **倫理：** 嚴禁捏造引用。只能使用分析部分提供的資訊。嚴禁抄襲範例的文字。
-5. **結構：** 使用有邏輯的流程（例如：主題式或方法論式）。
-6. **語言：** **整篇文章必須使用繁體中文（Traditional Chinese）撰寫。**
-7. 以清晰的 Markdown 格式輸出。
+### 第一部分：痛點起手
+- 先描述「${t}」此一主題在台灣當前教育現場所面臨的核心困境與挑戰。
+- 點出教師端與學生端雙向的困境，形塑出問題意識，讓讀者感受到研究的迫切性。
 
-**範例格式：**
-近年來，人工智慧技術在都市規劃領域展現出巨大潛力 [來源：AI_Urban_Planning.pdf]。機器學習演算法能夠分析大量都市數據，協助規劃者做出更精準的決策 [來源：Machine_Learning_Cities.pdf]。
+### 第二部分：政策掛鉤
+- 緊接著提及台灣現行教育政策（例如：十二年國民基本教育課程綱要、核心素養框架）對此主題的具體期待與重要性。
+- 說明在政策脈絡下，此議題為何不容忽視，彰顯研究的時代意義。
+
+### 第三部分：多維度定義
+- 針對研究主題的核心概念，引用 **2 至 3 組不同學者的定義**進行對比分析。
+- 每個定義後須以「（姓名，年份）」格式標注引用來源。
+- 在段末必須使用「**綜上所述**」或「**歸納而言**」作為段落開頭，給出對該核心概念的**綜合定義**。
+
+### 第四部分：實證回顧
+- 列舉至少 **3 至 4 個具體研究案例**，優先選用 2020 年後的近期研究。
+- 每個案例須包含：研究者姓名、年份、研究科目或場域、主要發現與結論。
+- 以「（姓名，年份）」格式標注引用。
+- 這些案例需共同形成論證，證明「${t}」相關方法或能力的有效性。
+
+### 第五部分：研究收束
+- 在上述背景的基礎上，說明本研究為何有必要導入特定的工具或方法進行探討。
+- 點出現有研究的不足之處（研究缺口），以此確立本研究的學術定位與貢獻。
+
+## 寫作風格與語調要求
+- **語氣：** 極度客觀、嚴謹、具備學術權威感，避免口語化表達。
+- **引用格式：** 嚴格遵守「（姓名，年份）」格式，並在文末無需附上參考書目。
+- **引用來源標注：** 在使用文獻分析結果中的資料時，同時附上「[來源：文獻檔名]」以供後續核查。
+- **詞彙偏好：** 多使用「心智歷程」、「先備知識」、「綜整」、「介入」、「實施」、「建構」、「脈絡」、「探討」、「論證」、「有效性」等專業學術詞彙。
+- **邏輯銜接：** 段落與段落之間必須有強烈的**因果或補充關係**，避免瑣碎的條列陳述，以散文式學術論述呈現。
+- **嚴禁捏造：** 只能使用上述文獻分析結果中實際存在的資訊，嚴禁捏造任何研究數據或學者姓名。
+
+## 輸出語言
+繁體中文（台灣學術用語），以清晰的 Markdown 格式輸出，使用 ##、### 標題區分各部分。
       `;return l.push({text:f}),(await(await c.generateContent(l)).response).text()})}}const kx="sfk",fs=3,N1=[75,115,99,104,111,108,97,114];function Sx(e){return Array.from(e).map((t,r)=>String.fromCharCode(t.charCodeAt(0)^N1[r%N1.length])).join("")}function pl(e){try{const n=JSON.stringify(e),t=btoa(Sx(n));localStorage.setItem(kx,t)}catch{}}function P8(){try{const e=localStorage.getItem(kx);if(!e)return Array(fs).fill("");const n=Sx(atob(e)),t=JSON.parse(n);if(!Array.isArray(t))return Array(fs).fill("");for(;t.length<fs;)t.push("");return t}catch{return Array(fs).fill("")}}var Et={},Xh="1.13.8",I1=typeof self=="object"&&self.self===self&&self||typeof global=="object"&&global.global===global&&global||Function("return this")()||{},qu=Array.prototype,Gh=Object.prototype,B1=typeof Symbol<"u"?Symbol.prototype:null,M8=qu.push,Lo=qu.slice,mo=Gh.toString,z8=Gh.hasOwnProperty,Ax=typeof ArrayBuffer<"u",j8=typeof DataView<"u",q8=Array.isArray,R1=Object.keys,O1=Object.create,L1=Ax&&ArrayBuffer.isView,$8=isNaN,H8=isFinite,Fx=!{toString:null}.propertyIsEnumerable("toString"),W1=["valueOf","isPrototypeOf","toString","propertyIsEnumerable","hasOwnProperty","toLocaleString"],V8=Math.pow(2,53)-1;function Un(e,n){return n=n==null?e.length-1:+n,function(){for(var t=Math.max(arguments.length-n,0),r=Array(t),i=0;i<t;i++)r[i]=arguments[i+n];switch(n){case 0:return e.call(this,r);case 1:return e.call(this,arguments[0],r);case 2:return e.call(this,arguments[0],arguments[1],r)}var a=Array(n+1);for(i=0;i<n;i++)a[i]=arguments[i];return a[n]=r,e.apply(this,a)}}function Or(e){var n=typeof e;return n==="function"||n==="object"&&!!e}function Nx(e){return e===null}function Kh(e){return e===void 0}function Yh(e){return e===!0||e===!1||mo.call(e)==="[object Boolean]"}function Ix(e){return!!(e&&e.nodeType===1)}function wn(e){var n="[object "+e+"]";return function(t){return mo.call(t)===n}}const $u=wn("String"),Qh=wn("Number"),Bx=wn("Date"),Rx=wn("RegExp"),Ox=wn("Error"),Zh=wn("Symbol"),Jh=wn("ArrayBuffer");var Lx=wn("Function"),X8=I1.document&&I1.document.childNodes;typeof/./!="function"&&typeof Int8Array!="object"&&typeof X8!="function"&&(Lx=function(e){return typeof e=="function"||!1});const bn=Lx,Wx=wn("Object");var Px=j8&&(!/\[native code\]/.test(String(DataView))||Wx(new DataView(new ArrayBuffer(8)))),ep=typeof Map<"u"&&Wx(new Map),G8=wn("DataView");function K8(e){return e!=null&&bn(e.getInt8)&&Jh(e.buffer)}const yo=Px?K8:G8,Lr=q8||wn("Array");function Wr(e,n){return e!=null&&z8.call(e,n)}var Af=wn("Arguments");(function(){Af(arguments)||(Af=function(e){return Wr(e,"callee")})})();const Hu=Af;function Mx(e){return!Zh(e)&&H8(e)&&!isNaN(parseFloat(e))}function np(e){return Qh(e)&&$8(e)}function tp(e){return function(){return e}}function zx(e){return function(n){var t=e(n);return typeof t=="number"&&t>=0&&t<=V8}}function jx(e){return function(n){return n==null?void 0:n[e]}}const du=jx("byteLength"),Y8=zx(du);var Q8=/\[object ((I|Ui)nt(8|16|32)|Float(32|64)|Uint8Clamped|Big(I|Ui)nt64)Array\]/;function Z8(e){return L1?L1(e)&&!yo(e):Y8(e)&&Q8.test(mo.call(e))}const rp=Ax?Z8:tp(!1),vn=jx("length");function J8(e){for(var n={},t=e.length,r=0;r<t;++r)n[e[r]]=!0;return{contains:function(i){return n[i]===!0},push:function(i){return n[i]=!0,e.push(i)}}}function qx(e,n){n=J8(n);var t=W1.length,r=e.constructor,i=bn(r)&&r.prototype||Gh,a="constructor";for(Wr(e,a)&&!n.contains(a)&&n.push(a);t--;)a=W1[t],a in e&&e[a]!==i[a]&&!n.contains(a)&&n.push(a)}function nn(e){if(!Or(e))return[];if(R1)return R1(e);var n=[];for(var t in e)Wr(e,t)&&n.push(t);return Fx&&qx(e,n),n}function $x(e){if(e==null)return!0;var n=vn(e);return typeof n=="number"&&(Lr(e)||$u(e)||Hu(e))?n===0:vn(nn(e))===0}function ip(e,n){var t=nn(n),r=t.length;if(e==null)return!r;for(var i=Object(e),a=0;a<r;a++){var o=t[a];if(n[o]!==i[o]||!(o in i))return!1}return!0}function Se(e){if(e instanceof Se)return e;if(!(this instanceof Se))return new Se(e);this._wrapped=e}Se.VERSION=Xh;Se.prototype.value=function(){return this._wrapped};Se.prototype.valueOf=Se.prototype.toJSON=Se.prototype.value;Se.prototype.toString=function(){return String(this._wrapped)};function P1(e){return new Uint8Array(e.buffer||e,e.byteOffset||0,du(e))}var M1="[object DataView]";function Hx(e,n){for(var t=[{a:e,b:n}],r=[],i=[];t.length;){var a=t.pop();if(a===!0){r.pop(),i.pop();continue}if(e=a.a,n=a.b,e===n){if(e!==0||1/e===1/n)continue;return!1}if(e==null||n==null)return!1;if(e!==e){if(n!==n)continue;return!1}var o=typeof e;if(o!=="function"&&o!=="object"&&typeof n!="object")return!1;e instanceof Se&&(e=e._wrapped),n instanceof Se&&(n=n._wrapped);var s=mo.call(e);if(s!==mo.call(n))return!1;if(Px&&s=="[object Object]"&&yo(e)){if(!yo(n))return!1;s=M1}switch(s){case"[object RegExp]":case"[object String]":if(""+e==""+n)continue;return!1;case"[object Number]":t.push({a:+e,b:+n});continue;case"[object Date]":case"[object Boolean]":if(+e==+n)continue;return!1;case"[object Symbol]":if(B1.valueOf.call(e)===B1.valueOf.call(n))continue;return!1;case"[object ArrayBuffer]":case M1:t.push({a:P1(e),b:P1(n)});continue}var u=s==="[object Array]";if(!u&&rp(e)){var c=du(e);if(c!==du(n))return!1;if(e.buffer===n.buffer&&e.byteOffset===n.byteOffset)continue;u=!0}if(!u){if(typeof e!="object"||typeof n!="object")return!1;var l=e.constructor,d=n.constructor;if(l!==d&&!(bn(l)&&l instanceof l&&bn(d)&&d instanceof d)&&"constructor"in e&&"constructor"in n)return!1}for(var h=r.length;h--;)if(r[h]===e){if(i[h]===n)break;return!1}if(!(h>=0))if(r.push(e),i.push(n),t.push(!0),u){if(h=e.length,h!==n.length)return!1;for(;h--;)t.push({a:e[h],b:n[h]})}else{var f=nn(e),y;if(h=f.length,nn(n).length!==h)return!1;for(;h--;){if(y=f[h],!Wr(n,y))return!1;t.push({a:e[y],b:n[y]})}}}return!0}function la(e){if(!Or(e))return[];var n=[];for(var t in e)n.push(t);return Fx&&qx(e,n),n}function ap(e){var n=vn(e);return function(t){if(t==null)return!1;var r=la(t);if(vn(r))return!1;for(var i=0;i<n;i++)if(!bn(t[e[i]]))return!1;return e!==Gx||!bn(t[op])}}var op="forEach",Vx="has",sp=["clear","delete"],Xx=["get",Vx,"set"],ek=sp.concat(op,Xx),Gx=sp.concat(Xx),nk=["add"].concat(sp,op,Vx);const Kx=ep?ap(ek):wn("Map"),Yx=ep?ap(Gx):wn("WeakMap"),Qx=ep?ap(nk):wn("Set"),Zx=wn("WeakSet");function li(e){for(var n=nn(e),t=n.length,r=Array(t),i=0;i<t;i++)r[i]=e[n[i]];return r}function Jx(e){for(var n=nn(e),t=n.length,r=Array(t),i=0;i<t;i++)r[i]=[n[i],e[n[i]]];return r}function up(e){for(var n={},t=nn(e),r=0,i=t.length;r<i;r++)n[e[t[r]]]=t[r];return n}function vo(e){var n=[];for(var t in e)bn(e[t])&&n.push(t);return n.sort()}function cp(e,n){return function(t){var r=arguments.length;if(n&&(t=Object(t)),r<2||t==null)return t;for(var i=1;i<r;i++)for(var a=arguments[i],o=e(a),s=o.length,u=0;u<s;u++){var c=o[u];(!n||t[c]===void 0)&&(t[c]=a[c])}return t}}const lp=cp(la),Zi=cp(nn),dp=cp(la,!0);function tk(){return function(){}}function eb(e){if(!Or(e))return{};if(O1)return O1(e);var n=tk();n.prototype=e;var t=new n;return n.prototype=null,t}function nb(e,n){var t=eb(e);return n&&Zi(t,n),t}function tb(e){return Or(e)?Lr(e)?e.slice():lp({},e):e}function rb(e,n){return n(e),e}function fp(e){return Lr(e)?e:[e]}Se.toPath=fp;function Wo(e){return Se.toPath(e)}function hp(e,n){for(var t=n.length,r=0;r<t;r++){if(e==null)return;e=e[n[r]]}return t?e:void 0}function pp(e,n,t){var r=hp(e,Wo(n));return Kh(r)?t:r}function ib(e,n){n=Wo(n);for(var t=n.length,r=0;r<t;r++){var i=n[r];if(!Wr(e,i))return!1;e=e[i]}return!!t}function Vu(e){return e}function ri(e){return e=Zi({},e),function(n){return ip(n,e)}}function Xu(e){return e=Wo(e),function(n){return hp(n,e)}}function Po(e,n,t){if(n===void 0)return e;switch(t??3){case 1:return function(r){return e.call(n,r)};case 3:return function(r,i,a){return e.call(n,r,i,a)};case 4:return function(r,i,a,o){return e.call(n,r,i,a,o)}}return function(){return e.apply(n,arguments)}}function ab(e,n,t){return e==null?Vu:bn(e)?Po(e,n,t):Or(e)&&!Lr(e)?ri(e):Xu(e)}function Gu(e,n){return ab(e,n,1/0)}Se.iteratee=Gu;function Mn(e,n,t){return Se.iteratee!==Gu?Se.iteratee(e,n):ab(e,n,t)}function ob(e,n,t){n=Mn(n,t);for(var r=nn(e),i=r.length,a={},o=0;o<i;o++){var s=r[o];a[s]=n(e[s],s,e)}return a}function gp(){}function sb(e){return e==null?gp:function(n){return pp(e,n)}}function ub(e,n,t){var r=Array(Math.max(0,e));n=Po(n,t,1);for(var i=0;i<e;i++)r[i]=n(i);return r}function fu(e,n){return n==null&&(n=e,e=0),e+Math.floor(Math.random()*(n-e+1))}const Ji=Date.now||function(){return new Date().getTime()};function cb(e){var n=function(a){return e[a]},t="(?:"+nn(e).join("|")+")",r=RegExp(t),i=RegExp(t,"g");return function(a){return a=a==null?"":""+a,r.test(a)?a.replace(i,n):a}}const lb={"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#x27;","`":"&#x60;"},db=cb(lb),rk=up(lb),fb=cb(rk),hb=Se.templateSettings={evaluate:/<%([\s\S]+?)%>/g,interpolate:/<%=([\s\S]+?)%>/g,escape:/<%-([\s\S]+?)%>/g};var gl=/(.)^/,ik={"'":"'","\\":"\\","\r":"r","\n":"n","\u2028":"u2028","\u2029":"u2029"},ak=/\\|'|\r|\n|\u2028|\u2029/g;function ok(e){return"\\"+ik[e]}var sk=/^\s*(\w|\$)+\s*$/;function pb(e,n,t){!n&&t&&(n=t),n=dp({},n,Se.templateSettings);var r=RegExp([(n.escape||gl).source,(n.interpolate||gl).source,(n.evaluate||gl).source].join("|")+"|$","g"),i=0,a="__p+='";e.replace(r,function(c,l,d,h,f){return a+=e.slice(i,f).replace(ak,ok),i=f+c.length,l?a+=`'+
 ((__t=(`+l+`))==null?'':_.escape(__t))+
 '`:d?a+=`'+
