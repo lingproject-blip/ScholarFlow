@@ -8,7 +8,7 @@ import { ProgressBar } from './components/ProgressBar';
 import { GeminiService } from './services/geminiService';
 import { saveApiKeys, loadApiKeys } from './services/apiKeyStorage';
 import { extractThesisDraft, ThesisDraftData } from './services/thesisDraftReader';
-import { Step, FileData, ThesisInfo, ApiKeyStatus as ApiKeyStatusType } from './types';
+import { Step, FileData, ThesisInfo, ApiKeyStatus as ApiKeyStatusType, StyleProfile } from './types';
 
 export default function App() {
   // State
@@ -19,6 +19,8 @@ export default function App() {
   const [isDraftLoading, setIsDraftLoading] = useState(false);
   const [references, setReferences] = useState<FileData[]>([]);
   const [seniorExample, setSeniorExample] = useState<FileData | null>(null);
+  const [styleProfile, setStyleProfile] = useState<StyleProfile | null>(null);
+  const [isStyleLoading, setIsStyleLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<string>('');
   const [draftResult, setDraftResult] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
@@ -111,7 +113,7 @@ export default function App() {
         thesisInfo.topic,
         thesisInfo.currentSection,
         analysisResult,
-        seniorExample,
+        styleProfile,
         thesisDraftData?.text || undefined,
         thesisDraftData?.pdfBase64 || undefined
       );
@@ -124,10 +126,26 @@ export default function App() {
     }
   };
 
+  const handleStyleAnalysis = async (file: FileData) => {
+    if (!geminiService.current) return;
+    setIsStyleLoading(true);
+    setError(null);
+    try {
+      const profile = await geminiService.current.analyzeWritingStyle(file);
+      setStyleProfile(profile);
+    } catch (e: any) {
+      setError(e.message || '風格分析失敗，請重試。');
+      setStyleProfile(null);
+    } finally {
+      setIsStyleLoading(false);
+    }
+  };
+
   const reset = () => {
     setStep(Step.THESIS_INFO);
     setReferences([]);
     setSeniorExample(null);
+    setStyleProfile(null);
     setAnalysisResult('');
     setDraftResult('');
     setError(null);
@@ -136,10 +154,10 @@ export default function App() {
 
   const resetToHome = () => {
     setStep(Step.API_KEYS);
-    // 注意：故意不清除 apiKeys state（保留 localStorage 中的 key）
     setThesisInfo({ title: '', topic: '', currentSection: '' });
     setReferences([]);
     setSeniorExample(null);
+    setStyleProfile(null);
     setAnalysisResult('');
     setDraftResult('');
     setError(null);
@@ -438,26 +456,108 @@ export default function App() {
         {/* Step 4: Upload Style Example */}
         {step === Step.UPLOAD_STYLE && (
           <div className="space-y-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-            <h2 className="text-xl font-bold text-slate-800">上傳學長姐範例 (選填)</h2>
-            <p className="text-sm text-slate-500">
-              上傳一份「學長姐的範例」或是您想模仿其語氣/結構的高品質論文。可指定特定頁碼範圍。
-            </p>
-            <FileUpload
-              label="選擇範例 PDF"
-              description="單一 PDF 檔案"
-              maxFiles={1}
-              showPageRange={true}
-              onFilesSelected={(files) => {
-                if (files.length > 0) setSeniorExample(files[0]);
-              }}
-            />
-            {seniorExample && (
-              <div className="text-sm text-indigo-700 bg-indigo-50 p-3 rounded-lg border border-indigo-100">
-                已選範例： <span className="font-semibold">{seniorExample.name}</span>
-                {seniorExample.pageRange && (
-                  <span className="ml-2 text-indigo-600">(頁碼: {seniorExample.pageRange})</span>
+            <div>
+              <h2 className="text-xl font-bold text-slate-800">上傳學長姐論文 <span className="text-sm font-normal text-slate-400">（選填）</span></h2>
+              <p className="text-sm text-slate-500 mt-1">
+                上傳後 AI 會分析其<strong>寫作風格</strong>（句式、詞彙、段落架構、語氣等）並在生成初稿時模仿，絕不抄襲任何內容。
+              </p>
+            </div>
+
+            {/* 上傳區域 */}
+            <label className="block cursor-pointer">
+              <div className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${seniorExample ? 'border-purple-300 bg-purple-50' : 'border-slate-300 hover:border-purple-400 hover:bg-slate-50'
+                }`}>
+                <input
+                  type="file"
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = async (ev) => {
+                      const base64 = (ev.target?.result as string).split(',')[1];
+                      const fileData: FileData = { name: file.name, type: file.type, base64 };
+                      setSeniorExample(fileData);
+                      setStyleProfile(null);
+                      await handleStyleAnalysis(fileData);
+                    };
+                    reader.readAsDataURL(file);
+                  }}
+                />
+                {isStyleLoading ? (
+                  <div className="flex flex-col items-center gap-3 text-purple-600">
+                    <svg className="animate-spin w-8 h-8" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    <span className="text-sm font-medium">AI 正在分析寫作風格中...</span>
+                    <span className="text-xs text-slate-400">這可能需要 10-30 秒</span>
+                  </div>
+                ) : seniorExample ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <svg className="w-10 h-10 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="font-semibold text-purple-700">{seniorExample.name}</p>
+                    <p className="text-xs text-slate-400">點擊此處可重新上傳</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2 text-slate-400">
+                    <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                    <p className="font-medium text-slate-500">點擊選擇學長姐的論文 PDF</p>
+                    <p className="text-xs">僅支援 <span className="font-semibold">.pdf</span></p>
+                  </div>
                 )}
               </div>
+            </label>
+
+            {/* 風格分析結果卡片 */}
+            {styleProfile && !isStyleLoading && (
+              <div className="bg-purple-50 border border-purple-200 rounded-xl p-5 space-y-3">
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.347.347a3.75 3.75 0 01-5.303 0L9.343 16.9z" />
+                  </svg>
+                  <h3 className="font-bold text-purple-800">✅ AI 已學習以下寫作風格特徵</h3>
+                </div>
+                <div className="grid grid-cols-1 gap-2 text-sm">
+                  {([
+                    ['📝 句型特徵', styleProfile.sentenceStyle],
+                    ['📚 詞彙偏好', styleProfile.vocabulary],
+                    ['🏗️ 段落結構', styleProfile.paragraphStructure],
+                    ['🎯 語氣風格', styleProfile.tone],
+                    ['🔗 引用格式', styleProfile.citationStyle],
+                    ['🔄 論證邏輯', styleProfile.logicFlow],
+                  ] as [string, string][]).map(([label, value]) => (
+                    <div key={label} className="bg-white rounded-lg p-3 border border-purple-100">
+                      <span className="font-semibold text-purple-700">{label}：</span>
+                      <span className="text-slate-600">{value}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="bg-purple-100 rounded-lg p-3 border border-purple-200">
+                  <span className="font-semibold text-purple-800">💡 整體風格摘要：</span>
+                  <span className="text-purple-700 text-sm">{styleProfile.summary}</span>
+                </div>
+                <p className="text-xs text-slate-400 flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                  AI 僅學習寫作形式特徵，論文原始內容不會被引用或參考。
+                </p>
+              </div>
+            )}
+
+            {/* 如果有上傳但分析失敗 */}
+            {seniorExample && !styleProfile && !isStyleLoading && (
+              <button
+                onClick={() => { setSeniorExample(null); setStyleProfile(null); }}
+                className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                移除並重新上傳
+              </button>
             )}
 
             {/* 進度條 */}
@@ -474,10 +574,10 @@ export default function App() {
               <Button variant="secondary" onClick={() => setStep(Step.UPLOAD_REFS)}>上一步</Button>
               <Button
                 onClick={handleAnalysis}
-                isLoading={isLoading}
-                disabled={isLoading}
+                isLoading={isLoading || isStyleLoading}
+                disabled={isLoading || isStyleLoading}
               >
-                開始分析
+                {styleProfile ? '✨ 套用風格並開始分析' : '開始分析'}
               </Button>
             </div>
           </div>

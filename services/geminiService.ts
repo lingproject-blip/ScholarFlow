@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { FileData } from "../types";
+import { FileData, StyleProfile } from "../types";
 import { ApiKeyManager } from "./ApiKeyManager";
 
 // Helper to wait
@@ -196,6 +196,53 @@ export class GeminiService {
   }
 
   /**
+   * 分析學長姐論文的寫作風格（不萃取任何實質內容）
+   */
+  async analyzeWritingStyle(seniorExample: FileData): Promise<StyleProfile> {
+    return this.executeWithRetry(async (genAI) => {
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+      const prompt = `
+## 你的任務
+你是一位學術寫作風格分析師。請仔細閱讀附件中的學術論文，**僅分析其寫作風格與形式特徵，嚴禁摘錄、複述或引用論文的任何實質研究內容、研究結果或具體論點**。
+
+請用繁體中文，針對以下七個面向，各用 2-4 句話描述此論文的風格特色：
+
+1. **sentenceStyle（句型特徵）**：句子長短比例、是否偏好複合句、常見句型結構。
+2. **vocabulary（詞彙特徵）**：常用的學術連接詞、轉折語、偏好的學術動詞（如「探討」「驗證」「顯示」等）。
+3. **paragraphStructure（段落結構）**：段落如何開頭與收尾、段落長度、是否使用數字或條列。
+4. **tone（語氣與客觀性）**：客觀程度、是否保持第三人稱、語氣是否嚴謹保守。
+5. **citationStyle（引用格式）**：引用的密度（每段幾個引用）、引用格式（例如 APA、括號內格式等）。
+6. **logicFlow（論證邏輯）**：論點如何展開與承接、是否有固定的「提出問題→引用論點→小結」模式。
+7. **otherFeatures（其他特色）**：任何其他值得模仿的寫作特色。
+
+最後請用一段話（summary）對整體風格做綜合描述，供寫作時整體把握。
+
+請以下列 JSON 格式**嚴格**輸出，不要有任何其他文字：
+{
+  "sentenceStyle": "...",
+  "vocabulary": "...",
+  "paragraphStructure": "...",
+  "tone": "...",
+  "citationStyle": "...",
+  "logicFlow": "...",
+  "otherFeatures": "...",
+  "summary": "..."
+}
+      `;
+
+      const result = await model.generateContent([
+        { inlineData: { mimeType: seniorExample.type, data: seniorExample.base64 } },
+        { text: prompt },
+      ]);
+      const text = result.response.text().trim();
+      // 去除可能的 markdown code fence
+      const jsonText = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
+      return JSON.parse(jsonText) as StyleProfile;
+    });
+  }
+
+  /**
    * 生成文獻探討初稿
    */
   async generateDraft(
@@ -203,7 +250,7 @@ export class GeminiService {
     researchTopic: string,
     currentSection: string | undefined,
     analysisText: string,
-    seniorExample: FileData | null,
+    styleProfile: StyleProfile | null,
     thesisDraftText?: string,
     thesisDraftPdfBase64?: string
   ): Promise<string> {
@@ -219,16 +266,6 @@ export class GeminiService {
         });
       }
 
-      // Add the Senior Example if it exists
-      if (seniorExample) {
-        parts.push({
-          inlineData: {
-            mimeType: seniorExample.type,
-            data: seniorExample.base64,
-          },
-        });
-      }
-
       const sectionContext = currentSection
         ? `\n**重要提醒**: 我目前正在撰寫「${currentSection}」這個小節的文獻探討。請將撰寫重點放在這個部分，確保內容與此小節高度相關。`
         : '';
@@ -238,17 +275,30 @@ export class GeminiService {
         ? `\n\n**【重要】我目前已完成的論文草稿**：\n以下是我已寫好的論文內容。請仔細閱讀，充分理解我的寫作風格、用詞習慣、論文結構，以及已涵蓋的論點。\n在撰寫新的文獻探討時，你必須：\n1. 延續相同的寫作風格與語氣\n2. 避免重複已在草稿中提及的論點\n3. 確保新內容與既有章節自然銜接\n\n---草稿開始---\n${thesisDraftText.substring(0, 10000)}\n---草稿結束---`
         : '';
 
+      // 風格仿照說明（若有提供）
+      const styleContext = styleProfile
+        ? `\n\n**【核心要求】模仿以下寫作風格**（依據學長姐論文分析所得，僅模仿形式，絕不使用其內容）：
+- **句型特徵**：${styleProfile.sentenceStyle}
+- **詞彙特徵**：${styleProfile.vocabulary}
+- **段落結構**：${styleProfile.paragraphStructure}
+- **語氣**：${styleProfile.tone}
+- **引用格式**：${styleProfile.citationStyle}
+- **論證邏輯**：${styleProfile.logicFlow}
+- **其他特色**：${styleProfile.otherFeatures}
+- **整體風格摘要**：${styleProfile.summary}
+
+請在撰寫時，嚴格依照上述風格特徵，包括句型長度、段落開頭句式、連接詞選用等，讓輸出在形式上高度接近這個風格框架。`
+        : `\n\n沒有提供風格範例，請使用標準的高品質台灣學術散文風格。`;
+
       const prompt = `
 ## 角色設定
 你現在是一位專業的學術研究者，擅長撰寫教育、社會科學領域的論文文獻探討。你的任務是以極度客觀、嚴謹、具備學術權威感的語氣，完成一篇約 3000 字的繁體中文學術文獻探討（Traditional Chinese，台灣學術用語）。
 
 ## 背景資訊
 - 論文題目：「${thesisTitle}」
-- 研究主題：「${researchTopic}」${sectionContext}${draftContext}
+- 研究主題：「${researchTopic}」${sectionContext}${draftContext}${styleContext}
 - 文獻分析結果：
 ${analysisText}
-
-${seniorExample ? "附件中有一個檔案是「學長姐的文獻探討範例」。請僅參考其風格、結構、語氣和流暢度，切勿抄襲其內容。" : "沒有提供風格範例，請使用標準的高品質學術散文風格。"}
 
 ## 撰寫結構要求（請依序完成以下五個部分）
 

@@ -1,3 +1,14 @@
+export interface StyleProfile {
+  sentenceStyle: string;       // 句型特徵
+  vocabulary: string;          // 常用詞彙與學術用語
+  paragraphStructure: string;  // 段落架構與開頭/結尾句式
+  tone: string;                // 語氣與客觀性
+  citationStyle: string;       // 引用格式與密度
+  logicFlow: string;           // 論點展開的邏輯順序
+  otherFeatures: string;       // 其他特色
+  summary: string;             // 綜合風格摘要（一段話）
+}
+
 export interface ThesisInfo {
   title: string;
   topic: string;
