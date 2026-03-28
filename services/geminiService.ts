@@ -171,10 +171,10 @@ export class GeminiService {
         }
 
         // 加入參考文獻 PDF
-        contentParts.push(
-          { inlineData: { mimeType: ref.type, data: ref.base64 } },
-          { text: prompt }
-        );
+        if (ref.base64) {
+          contentParts.push({ inlineData: { mimeType: ref.type, data: ref.base64 } });
+        }
+        contentParts.push({ text: prompt });
 
         const result = await model.generateContent(contentParts);
 
@@ -214,7 +214,8 @@ export class GeminiService {
 4. **tone（語氣與客觀性）**：客觀程度、是否保持第三人稱、語氣是否嚴謹保守。
 5. **citationStyle（引用格式）**：引用的密度（每段幾個引用）、引用格式（例如 APA、括號內格式等）。
 6. **logicFlow（論證邏輯）**：論點如何展開與承接、是否有固定的「提出問題→引用論點→小結」模式。
-7. **otherFeatures（其他特色）**：任何其他值得模仿的寫作特色。
+7. **structuralOutline（標題與整體結構大綱）**：分析其大標題與次要標題的層次、長度與命名方式，以及整體的章節框架結構。
+8. **otherFeatures（其他特色）**：任何其他值得模仿的寫作特色。
 
 最後請用一段話（summary）對整體風格做綜合描述，供寫作時整體把握。
 
@@ -226,15 +227,21 @@ export class GeminiService {
   "tone": "...",
   "citationStyle": "...",
   "logicFlow": "...",
+  "structuralOutline": "...",
   "otherFeatures": "...",
   "summary": "..."
 }
       `;
 
-      const result = await model.generateContent([
-        { inlineData: { mimeType: seniorExample.type, data: seniorExample.base64 } },
-        { text: prompt },
-      ]);
+      const contentParts: any[] = [];
+      if (seniorExample.textContent) {
+        contentParts.push({ text: `貼上的文字內容：\n${seniorExample.textContent}` });
+      } else if (seniorExample.base64) {
+        contentParts.push({ inlineData: { mimeType: seniorExample.type, data: seniorExample.base64 } });
+      }
+      contentParts.push({ text: prompt });
+
+      const result = await model.generateContent(contentParts);
       const text = result.response.text().trim();
       // 去除可能的 markdown code fence
       const jsonText = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
@@ -284,6 +291,7 @@ export class GeminiService {
 - **語氣**：${styleProfile.tone}
 - **引用格式**：${styleProfile.citationStyle}
 - **論證邏輯**：${styleProfile.logicFlow}
+- **結構與大綱**：${styleProfile.structuralOutline}
 - **其他特色**：${styleProfile.otherFeatures}
 - **整體風格摘要**：${styleProfile.summary}
 

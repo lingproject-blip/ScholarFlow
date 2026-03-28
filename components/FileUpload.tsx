@@ -12,7 +12,7 @@ interface FileUploadProps {
 
 export const FileUpload: React.FC<FileUploadProps> = ({
   onFilesSelected,
-  maxFiles = 5,
+  maxFiles = 10,
   accept = ".pdf",
   label,
   description,

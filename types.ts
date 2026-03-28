@@ -5,6 +5,7 @@ export interface StyleProfile {
   tone: string;                // 語氣與客觀性
   citationStyle: string;       // 引用格式與密度
   logicFlow: string;           // 論點展開的邏輯順序
+  structuralOutline: string;   // 標題與整體結構大綱
   otherFeatures: string;       // 其他特色
   summary: string;             // 綜合風格摘要（一段話）
 }
@@ -18,7 +19,8 @@ export interface ThesisInfo {
 export interface FileData {
   name: string;
   type: string;
-  base64: string;
+  base64?: string;
+  textContent?: string;
   pageRange?: string; // 頁碼範圍，例如 "5-10" 或 "5,7,9-12"
 }
 

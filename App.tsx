@@ -21,6 +21,7 @@ export default function App() {
   const [seniorExample, setSeniorExample] = useState<FileData | null>(null);
   const [styleProfile, setStyleProfile] = useState<StyleProfile | null>(null);
   const [isStyleLoading, setIsStyleLoading] = useState(false);
+  const [pastedStyleText, setPastedStyleText] = useState("");
   const [analysisResult, setAnalysisResult] = useState<string>('');
   const [draftResult, setDraftResult] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
@@ -146,6 +147,7 @@ export default function App() {
     setReferences([]);
     setSeniorExample(null);
     setStyleProfile(null);
+    setPastedStyleText('');
     setAnalysisResult('');
     setDraftResult('');
     setError(null);
@@ -158,6 +160,7 @@ export default function App() {
     setReferences([]);
     setSeniorExample(null);
     setStyleProfile(null);
+    setPastedStyleText('');
     setAnalysisResult('');
     setDraftResult('');
     setError(null);
@@ -421,9 +424,9 @@ export default function App() {
           <div className="space-y-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
             <h2 className="text-xl font-bold text-slate-800">上傳英文參考文獻</h2>
             <FileUpload
-              label="選擇 PDF 檔案 (最多 5 個)"
+              label="選擇 PDF 檔案 (最多 10 個)"
               description="英文學術論文 (限 PDF)"
-              maxFiles={5}
+              maxFiles={10}
               onFilesSelected={(files) => {
                 setReferences(files);
               }}
@@ -514,6 +517,39 @@ export default function App() {
               </div>
             </label>
 
+            {/* 貼上文字區域 */}
+            {!seniorExample && !isStyleLoading && (
+              <div className="mt-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="h-px bg-slate-200 flex-1"></div>
+                  <span className="text-xs text-slate-400 font-medium">或直接貼上文字片段</span>
+                  <div className="h-px bg-slate-200 flex-1"></div>
+                </div>
+                <div className="relative">
+                  <textarea
+                    value={pastedStyleText}
+                    onChange={(e) => setPastedStyleText(e.target.value)}
+                    placeholder="在此貼上學長姐論文的文字片段（建議 300-500 字以上）..."
+                    className="w-full h-32 rounded-xl border border-slate-300 p-4 text-sm focus:ring-2 focus:ring-purple-500 outline-none resize-none bg-slate-50 focus:bg-white transition-colors"
+                  />
+                  <div className="absolute bottom-3 right-3">
+                    <button
+                      className="px-3 py-1.5 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                      disabled={pastedStyleText.trim().length < 50}
+                      onClick={async () => {
+                        const fileData: FileData = { name: '貼上文字片段', type: 'text/plain', textContent: pastedStyleText };
+                        setSeniorExample(fileData);
+                        setStyleProfile(null);
+                        await handleStyleAnalysis(fileData);
+                      }}
+                    >
+                      分析貼上文字
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* 風格分析結果卡片 */}
             {styleProfile && !isStyleLoading && (
               <div className="bg-purple-50 border border-purple-200 rounded-xl p-5 space-y-3">
@@ -531,6 +567,7 @@ export default function App() {
                     ['🎯 語氣風格', styleProfile.tone],
                     ['🔗 引用格式', styleProfile.citationStyle],
                     ['🔄 論證邏輯', styleProfile.logicFlow],
+                    ['📑 結構與大綱', styleProfile.structuralOutline],
                   ] as [string, string][]).map(([label, value]) => (
                     <div key={label} className="bg-white rounded-lg p-3 border border-purple-100">
                       <span className="font-semibold text-purple-700">{label}：</span>
